@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ebola outbreak comparison — cumulative cases and deaths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --paper:#f7f8f8; --panel:#ffffff; --rule:#d8dcdd; --rule-soft:#e8ebec;
+  --ink:#16191b; --ink-2:#5b6367; --ink-3:#8b9296;
+  --s2026:#eb6834; --s2014:#2a78d6; --s2018:#1baf7a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 72px}
+header{border-bottom:1px solid var(--rule);padding-bottom:24px;margin-bottom:28px}
+.asof{display:inline-flex;align-items:baseline;gap:9px;margin:0 0 16px;
+  padding:7px 14px 7px 12px;border-left:3px solid var(--s2026);
+  background:#fdf1eb;border-radius:0 4px 4px 0}
+.asof b{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:500;
+  color:var(--ink);letter-spacing:-.01em}
+.asof span{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3)}
+h1{font-size:27px;font-weight:600;letter-spacing:-.015em;margin:0 0 8px;line-height:1.25}
+.sub{color:var(--ink-2);margin:0;max-width:62ch}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;
+  background:var(--rule-soft);border:1px solid var(--rule-soft);margin:28px 0}
+.key{background:var(--panel);padding:14px 16px}
+.key .nm{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;margin-bottom:8px}
+.swatch{width:11px;height:11px;border-radius:2px;flex:none}
+.key .fig{font-family:"IBM Plex Mono",monospace;font-size:19px;font-weight:500;letter-spacing:-.02em}
+.key .meta{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);margin-top:3px}
+.controls{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;
+  background:var(--panel);border:1px solid var(--rule-soft);padding:16px 18px;margin-bottom:24px}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3)}
+.ctl input[type=number]{font-family:"IBM Plex Mono",monospace;font-size:14px;width:104px;
+  padding:7px 9px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);color:var(--ink)}
+.ctl input:focus-visible{outline:2px solid var(--s2014);outline-offset:1px}
+.chk{display:flex;align-items:center;gap:7px;font-family:"IBM Plex Sans",sans-serif;
+  font-size:13.5px;color:var(--ink);text-transform:none;letter-spacing:0;
+  padding:6px 0;cursor:pointer}
+.chk input{width:15px;height:15px;accent-color:var(--s2014);cursor:pointer;margin:0}
+.hint{font-size:12px;color:var(--ink-3);max-width:34ch;line-height:1.45}
+figure{margin:0 0 34px;background:var(--panel);border:1px solid var(--rule-soft);padding:18px 18px 14px}
+figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  flex-wrap:wrap;margin-bottom:14px}
+.cap-t{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.cap-n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3)}
+.canvas-box{position:relative;height:400px}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--rule-soft);font-size:12px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+h2{font-size:17px;font-weight:600;letter-spacing:-.01em;margin:38px 0 12px;
+  padding-top:22px;border-top:1px solid var(--rule)}
+h3{font-size:13px;font-weight:600;margin:22px 0 6px}
+p,li{color:var(--ink-2)}
+p{max-width:70ch}
+ul{padding-left:19px;max-width:70ch}
+li{margin-bottom:5px}
+code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;
+  background:#eef0f1;padding:1px 5px;border-radius:3px;color:var(--ink)}
+pre{font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.65;
+  background:var(--panel);border:1px solid var(--rule-soft);border-left:3px solid var(--s2026);
+  padding:14px 16px;overflow-x:auto;color:var(--ink)}
+table{border-collapse:collapse;width:100%;max-width:70ch;font-size:13.5px;margin:10px 0 4px}
+th,td{text-align:left;padding:7px 12px 7px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500}
+td{color:var(--ink-2)}
+td:first-child{color:var(--ink)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="asof" id="asof"></p>
+  <h1>The three largest Ebola outbreaks, aligned by days since declaration</h1>
+  <p class="sub">Three outbreaks of two different viruses. <b>BDBV</b> is Bundibugyo virus, the species behind the 2026 outbreak in DRC and Uganda. <b>EBOV</b> is Zaire ebolavirus, the species behind both the 2014 West African and 2018 DRC epidemics.</p>
+  <p class="sub" style="margin-top:10px">The cumulative charts plot reported values; the daily incidence chart is derived from them.</p>
+  <p class="sub" style="margin-top:10px">Ervebo is Merck's rVSV-ZEBOV vaccine, developed and licensed against Zaire ebolavirus. Its efficacy against Bundibugyo virus is unknown and currently under trial.</p>
+</header>
+
+<div class="keys" id="keys"></div>
+
+<div class="controls">
+  <div class="ctl">
+    <label for="xmax">X-axis max (days)</label>
+    <input type="number" id="xmax" value="740" min="100" max="800" step="20">
+  </div>
+  <div class="ctl">
+    <label for="shift">Shift 2026 by (days)</label>
+    <input type="number" id="shift" value="0" min="0" max="200" step="10">
+  </div>
+  <div class="ctl">
+    <label for="marks">Annotations</label>
+    <label class="chk"><input type="checkbox" id="marks" checked> Show vaccination markers</label>
+  </div>
+  <p class="hint">True start dates are unknown for all three outbreaks. Shifting lets the 2026 overlay be varied; the historical curves stay anchored to their declaration dates.</p>
+</div>
+
+<figure>
+  <figcaption>
+    <span class="cap-t">Cumulative confirmed cases</span>
+    <span class="cap-n" id="n-cases"></span>
+  </figcaption>
+  <div class="canvas-box">
+    <canvas id="casesChart" role="img" aria-label="Cumulative confirmed cases for three Ebola outbreaks plotted against days since declaration"></canvas>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--s2026)"></i>2026 DRC BDBV</span>
+    <span><i class="swatch" style="background:var(--s2014)"></i>2014 West Africa EBOV</span>
+    <span><i class="swatch" style="background:var(--s2018)"></i>2018 DRC EBOV</span>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>
+    <span class="cap-t">Cumulative deaths</span>
+    <span class="cap-n" id="n-deaths"></span>
+  </figcaption>
+  <div class="canvas-box">
+    <canvas id="deathsChart" role="img" aria-label="Cumulative deaths for three Ebola outbreaks plotted against days since declaration"></canvas>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--s2026)"></i>2026 DRC BDBV</span>
+    <span><i class="swatch" style="background:var(--s2014)"></i>2014 West Africa EBOV</span>
+    <span><i class="swatch" style="background:var(--s2018)"></i>2018 DRC EBOV</span>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>
+    <span class="cap-t">New confirmed cases per day</span>
+    <span class="cap-n" id="n-inc"></span>
+  </figcaption>
+  <div class="canvas-box">
+    <canvas id="incChart" role="img" aria-label="New confirmed cases per day for three Ebola outbreaks, derived from the reported cumulative totals"></canvas>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--s2026)"></i>2026 DRC BDBV</span>
+    <span><i class="swatch" style="background:var(--s2014)"></i>2014 West Africa EBOV</span>
+    <span><i class="swatch" style="background:var(--s2018)"></i>2018 DRC EBOV</span>
+  </div>
+  <p style="font-size:12.5px;color:var(--ink-2);margin-top:12px;max-width:70ch">Unlike the two charts above, this one is derived rather than reported. No source publishes daily incidence, so each value is the average rate across a reporting interval, smoothed over a rolling window. Long intervals are averaged flat, which hides any variation inside them.</p>
+</figure>
+
+<h2>Sources</h2>
+<table>
+  <tr><th>Outbreak</th><th>Span</th><th>Source</th></tr>
+  <tr><td>2026 DRC BDBV</td><td>Days 0–110</td><td>Africa CDC situation reports and executive briefs; WHO AFRO weekly external situation reports; WHO Disease Outbreak News; DRC Ministry of Health daily figures relayed by ECDC</td></tr>
+  <tr><td>2014 West Africa EBOV</td><td>Days 4–288</td><td>WHO situation reports compiled by C. Rivers (<code>github.com/cmrivers/ebola</code>), summed across Guinea, Liberia and Sierra Leone</td></tr>
+  <tr><td>2014 West Africa EBOV</td><td>Days 289–731</td><td>WHO patient database weekly country figures, same three-country sum</td></tr>
+  <tr><td>2018 DRC EBOV</td><td>Days 2–686</td><td>DRC Ministry of Health daily reports via the HDX North Kivu dataset</td></tr>
+  <tr><td>2018 DRC EBOV</td><td>Day 694</td><td>WHO end-of-outbreak declaration, 25 June 2020</td></tr>
+</table>
+
+<h2>Method and limitations</h2>
+
+<h3>Handling of superseded values</h3>
+<p>Cumulative counts occasionally fell in the original reports, most visibly during WHO's November 2014 patient-database reconciliation, which first added roughly 3,800 previously uncounted cases and then removed several hundred. A reported point is kept only where no later report shows a lower cumulative value; contradicted interim values are dropped.</p>
+
+<h3>Case definitions differ between outbreaks</h3>
+<p>The 2026 series counts laboratory-confirmed cases only, excluding the large pool of suspected cases and suspected deaths recorded early in the outbreak. The 2014 and 2018 series follow their sources in combining confirmed and probable cases. Two different reporting systems are spliced within the 2014 series at day 288, where the patient-database figures run about 1.5 percent below the daily situation-report stream after duplicate removal.</p>
+
+<h3>Fatality ratios are not directly comparable across outbreaks</h3>
+<table>
+  <tr><th>Outbreak</th><th>CFR</th></tr>
+  <tr><td>2014 West Africa EBOV</td><td>~40%</td></tr>
+  <tr><td>2018 DRC EBOV</td><td>~66%</td></tr>
+  <tr><td>2026 DRC BDBV</td><td>~48%, rising</td></tr>
+</table>
+<p>These are crude ratios: cumulative reported deaths divided by cumulative reported cases. They should not be compared closely against one another. The denominators differ in what they count and in how completely cases were ever detected, and the 2026 figure is still moving because the outbreak is ongoing and many cases have not yet resolved.</p>
+
+<h3>Declaration dates are not true start dates</h3>
+<p>Every one of these outbreaks was already spreading before it was recognised, and in each case the true starting point is unknown. Aligning the curves on day zero is therefore a convention, not a measurement, and it favours whichever outbreak was detected latest in its course. The shift control moves the 2026 curve along the x-axis so its overlay against the historical curves can be varied.</p>
+
+</div>
+
+<script>
+// ============================================================
+//  UPDATE HERE — 2026 Bundibugyo outbreak
+//  Add one row per report: ["YYYY-MM-DD", cases, deaths]
+//  Keep in date order. Confirmed cases only, DRC + Uganda.
+//  Day numbers are derived from the declaration date below.
+// ============================================================
+const DECLARATION_2026 = "2026-05-15";
+
+const DATA_2026 = [
+  ["2026-05-15",     8,     4],   // Africa CDC SitRep 01 / DRC MoH declaration
+  ["2026-05-21",    85,    10],   // WHO AFRO SitRep
+  ["2026-05-27",   129,    18],   // Africa CDC SitRep May 27
+  ["2026-06-01",   332,    49],   // Africa CDC update Jun 1
+  ["2026-06-02",   359,    61],   // Africa CDC Issue 16 Jun 2
+  ["2026-06-05",   505,    80],   // Africa CDC update Jun 5
+  ["2026-06-06",   534,    93],   // WHO DON606 Jun 6
+  ["2026-06-09",   645,   114],   // WHO AFRO SitRep
+  ["2026-06-17",   915,   234],   // WHO AFRO SitRep
+  ["2026-07-03",  1480,   454],   // WHO AFRO SitRep
+  ["2026-07-15",  2144,   830],   // WHO DON613 Jul 15 (DRC+UGA)
+  ["2026-07-30",  3625,  1589],   // WHO DON614 Jul 30 (DRC+UGA)
+  ["2026-08-02",  3822,  1709],   // Africa CDC Executive Brief Aug 2
+  ["2026-08-05",  4073,  1853],   // Africa CDC SitRep Aug 5 (DRC+UGA)
+  ["2026-08-09",  4381,  2011],   // WHO AFRO SitRep 13 Aug 9
+  ["2026-08-16",  5041,  2380],   // WHO AFRO SitRep 14 / Africa CDC Aug 16
+  ["2026-08-19",  5310,  2518],   // DRC MoH daily via ECDC Aug 19 (+UGA)
+  ["2026-08-21",  5479,  2608],   // DRC MoH daily via ECDC Aug 21 (+UGA)
+  ["2026-08-22",  5534,  2644],   // DRC MoH daily via ECDC Aug 22 (+UGA)
+  ["2026-08-24",  5676,  2717],   // DRC MoH via ECDC 25 Aug (data to 24 Aug) (+UGA)
+  ["2026-08-25",  5733,  2746],   // DRC MoH via ECDC 26 Aug (data to 25 Aug) (+UGA)
+  ["2026-08-26",  5814,  2788],   // DRC MoH situation update 27 Aug (data to 26 Aug) via ECDC (+UGA)
+  ["2026-08-29",  6061,  2913],   // DRC MoH SitRep 30 Aug (data to 29 Aug) via ECDC (+UGA)
+  ["2026-08-30",  6120,  2952],   // DRC MoH SitRep 108, 31 Aug (data to 30 Aug) via ECDC (+UGA)
+  ["2026-09-01",  6270,  3041],   // DRC MoH via ECDC 2 Sep (data to 1 Sep) (+UGA)
+  ["2026-09-02",  6362,  3074],   // DRC MoH via ECDC 3 Sep (data to 2 Sep) (+UGA)
+];
+// ============================================================
+//  Historical series below — no need to edit. [day, value]
+// ============================================================
+const N14C = [[4,117],[5,117],[6,121],[8,132],[9,137],[12,163],[15,174],[17,185],[19,187],[22,196],[23,206],[24,236],[39,239],[41,244],[48,245],[50,260],[61,270],[65,309],[66,354],[70,420],[72,436],[74,438],[79,453],[85,520],[86,528],[87,559],[88,567],[89,589],[91,599],[99,759],[101,779],[105,844],[107,888],[111,964],[113,982],[116,1048],[119,1093],[122,1201],[125,1322],[128,1437],[131,1599],[134,1702],[136,1766],[139,1835],[141,1963],[143,2115],[146,2225],[148,2458],[150,2599],[156,3052],[161,3685],[166,3944],[168,4366],[170,4692],[171,4784],[174,4963],[175,5325],[178,5637],[180,5703],[181,5843],[182,6242],[184,6553],[189,7157],[192,7470],[195,7560],[196,8011],[198,8215],[199,8376],[202,8549],[203,8973],[204,8986],[205,9191],[209,9594],[210,9911],[212,9924],[213,10114],[215,11984],[224,13015],[225,13044],[226,13241],[230,13444],[231,14068],[232,14124],[233,14383],[237,14574],[238,15113],[240,15319],[244,15405],[245,15901],[250,16368],[252,17111],[255,17195],[259,17908],[261,17986],[266,18569],[270,18602],[271,19372],[272,19463],[276,19810],[279,20081],[280,20170],[283,20478],[285,20520],[286,20657],[289,20712],[290,20712],[291,20972],[292,21086],[295,21171],[296,21171],[297,21261],[298,21329],[299,21373],[302,21614],[303,21689],[304,21689],[305,21759],[306,21797],[309,21924],[310,22057],[311,22057],[312,22101],[313,22124],[316,22334],[317,22444],[318,22460],[319,22487],[320,22525],[324,22859],[325,22859],[326,22903],[327,22999],[330,23182],[331,23218],[332,23218],[333,23366],[334,23371],[337,23539],[339,23694],[340,23781],[341,23825],[344,23913],[346,23913],[347,23983],[348,24014],[352,24247],[353,24247],[354,24350],[355,24509],[358,24597],[359,24666],[360,24666],[362,24753],[365,24842],[366,24872],[367,24872],[368,24927],[369,24957],[380,25516],[382,25532],[386,25591],[387,25611],[388,25791],[389,25831],[390,25855],[393,25863],[394,25872],[395,26044],[396,26074],[397,26101],[400,26159],[401,26277],[403,26290],[404,26298],[407,26339],[408,26536],[409,26593],[410,26626],[411,26648],[414,26722],[416,26722],[417,26755],[418,26763],[421,26885],[422,26933],[423,26933],[424,26971],[425,26979],[428,27002],[429,27013],[430,27013],[431,27040],[432,27055],[435,27135],[436,27145],[437,27145],[438,27173],[439,27189],[442,27219],[443,27237],[444,27237],[445,27251],[446,27275],[449,27305],[451,27305],[452,27331],[453,27352],[456,27415],[457,27443],[458,27443],[459,27467],[460,27479],[463,27505],[464,27514],[465,27514],[466,27540],[467,27551],[470,27560],[471,27569],[472,27569],[473,27579],[474,27594],[477,27621],[478,27635],[479,27635],[480,27637],[481,27645],[484,27691],[485,27699],[486,27699],[487,27716],[488,27717],[491,27741],[492,27742],[493,27742],[494,27830],[495,27834],[498,27854],[499,27856],[500,27856],[501,27884],[502,27889],[505,27922],[506,27923],[507,27923],[508,27942],[509,27942],[512,27945],[513,27946],[514,27946],[515,27976],[516,27994],[519,27994],[520,27999],[521,27999],[522,28045],[523,28049],[526,28059],[527,28067],[528,28067],[529,28096],[530,28097],[533,28129],[534,28141],[535,28141],[536,28154],[537,28158],[540,28206],[541,28214],[542,28214],[543,28239],[544,28245],[547,28274],[548,28289],[549,28289],[550,28313],[551,28318],[554,28365],[555,28382],[556,28382],[557,28402],[558,28406],[561,28411],[562,28415],[563,28415],[564,28421],[565,28423],[569,28448],[571,28460],[572,28462],[576,28470],[578,28498],[579,28505],[582,28522],[583,28533],[585,28540],[586,28541],[590,28565],[592,28575],[593,28580],[604,28592],[607,28592],[611,28592],[613,28592],[618,28592],[619,28592],[626,28592],[627,28592],[628,28592],[639,28592],[640,28592],[646,28592],[731,28592]];
+const N14D = [[6,74],[8,86],[9,90],[12,95],[15,107],[17,115],[19,121],[22,123],[23,123],[24,137],[39,160],[41,166],[48,168],[50,182],[61,185],[65,202],[66,211],[70,226],[72,233],[74,233],[79,257],[85,295],[87,319],[88,320],[89,329],[91,338],[99,467],[101,481],[105,518],[107,539],[111,603],[113,613],[116,632],[119,660],[122,672],[125,728],[128,825],[131,886],[134,931],[136,959],[139,1011],[141,1066],[143,1141],[146,1225],[148,1346],[150,1422],[156,1546],[161,1841],[166,2097],[168,2218],[170,2218],[171,2241],[174,2453],[175,2622],[178,2741],[180,2772],[181,2803],[182,2909],[184,3083],[189,3330],[192,3431],[195,3572],[196,3857],[198,3973],[199,4024],[202,4166],[203,4484],[204,4510],[205,4546],[215,4620],[224,4808],[225,4821],[226,4950],[230,5020],[232,5123],[233,5165],[237,5317],[238,5406],[240,5444],[244,5497],[245,5674],[250,5803],[252,6055],[255,6087],[259,6373],[261,6486],[266,6900],[270,6986],[271,7526],[272,7573],[276,7675],[279,7842],[280,7889],[283,8037],[285,8062],[286,8178],[289,8220],[290,8220],[291,8259],[292,8289],[295,8371],[296,8371],[297,8414],[298,8444],[299,8468],[302,8594],[303,8626],[304,8626],[305,8668],[306,8675],[309,8737],[310,8795],[311,8795],[312,8818],[313,8829],[316,8921],[317,8959],[318,8966],[319,8979],[320,9004],[324,9162],[325,9162],[326,9194],[327,9253],[330,9353],[331,9365],[332,9365],[333,9437],[334,9442],[337,9541],[339,9589],[340,9637],[341,9660],[344,9714],[346,9714],[347,9823],[348,9840],[352,9961],[353,9961],[354,10004],[355,10096],[358,10144],[359,10179],[360,10179],[362,10236],[365,10299],[366,10311],[367,10311],[368,10338],[369,10350],[380,10573],[382,10584],[386,10604],[387,10611],[388,10689],[389,10699],[390,10702],[393,10715],[394,10721],[395,10808],[396,10820],[397,10824],[400,10842],[401,10884],[403,10890],[404,10892],[407,10895],[408,10980],[409,11005],[410,11007],[411,11007],[414,11064],[416,11064],[417,11072],[418,11074],[421,11117],[422,11120],[423,11120],[424,11122],[425,11125],[428,11132],[429,11134],[430,11134],[431,11140],[432,11142],[435,11145],[436,11147],[437,11147],[438,11149],[439,11149],[442,11154],[443,11158],[444,11158],[445,11163],[446,11163],[449,11168],[451,11169],[452,11173],[453,11178],[456,11190],[457,11207],[458,11207],[459,11217],[460,11217],[463,11220],[464,11220],[465,11220],[466,11229],[467,11233],[470,11244],[471,11245],[472,11245],[473,11252],[474,11252],[477,11258],[478,11259],[479,11259],[480,11259],[481,11262],[484,11266],[485,11267],[486,11267],[487,11271],[488,11272],[491,11276],[492,11277],[493,11277],[494,11278],[495,11278],[498,11279],[499,11279],[500,11279],[501,11281],[502,11281],[505,11281],[506,11281],[507,11281],[508,11281],[509,11282],[512,11282],[513,11282],[514,11282],[515,11284],[516,11284],[519,11285],[520,11285],[521,11285],[522,11286],[523,11286],[526,11287],[527,11288],[528,11288],[529,11288],[530,11288],[533,11289],[534,11289],[535,11289],[536,11289],[537,11289],[540,11289],[541,11289],[542,11289],[543,11291],[544,11292],[547,11293],[548,11293],[549,11293],[550,11294],[551,11294],[554,11294],[555,11294],[556,11294],[557,11294],[558,11294],[561,11295],[562,11295],[563,11295],[564,11295],[565,11295],[569,11295],[571,11295],[572,11296],[576,11296],[578,11296],[579,11296],[582,11296],[583,11296],[585,11297],[586,11297],[590,11297],[592,11297],[593,11297],[604,11297],[607,11297],[611,11297],[613,11297],[618,11297],[619,11297],[626,11297],[627,11297],[628,11297],[639,11297],[640,11297],[646,11297],[731,11297]];
+const N18C = [[2,43],[4,43],[5,43],[6,44],[7,44],[8,48],[9,49],[10,52],[11,57],[12,66],[13,73],[14,78],[15,87],[16,90],[17,91],[18,96],[19,102],[20,103],[21,103],[22,105],[23,107],[24,111],[25,111],[26,112],[27,115],[28,116],[29,118],[30,120],[31,120],[32,121],[33,124],[34,127],[35,129],[36,129],[37,131],[38,131],[39,132],[40,132],[41,133],[42,137],[43,140],[44,140],[45,142],[46,142],[47,142],[48,142],[49,143],[50,147],[51,147],[52,149],[53,150],[54,151],[55,151],[56,154],[57,155],[58,157],[59,159],[60,161],[61,161],[62,162],[63,165],[64,167],[65,172],[66,177],[67,181],[68,188],[69,194],[70,200],[71,205],[72,207],[73,211],[74,214],[75,216],[76,220],[77,223],[78,227],[79,235],[80,237],[81,238],[82,244],[83,247],[84,251],[85,257],[86,266],[87,267],[88,274],[89,276],[90,279],[91,285],[92,287],[93,293],[94,298],[95,300],[96,305],[97,308],[98,312],[99,319],[100,326],[101,329],[102,333],[103,339],[104,341],[105,344],[106,352],[107,358],[108,366],[109,373],[110,373],[111,386],[112,393],[113,399],[114,403],[115,412],[116,419],[117,421],[118,422],[119,426],[120,428],[121,434],[122,440],[123,444],[124,453],[125,458],[126,471],[127,477],[128,489],[129,494],[130,498],[131,500],[132,505],[133,515],[134,521],[135,529],[136,531],[137,539],[138,542],[139,549],[140,560],[141,563],[142,567],[143,574],[144,579],[145,583],[146,585],[147,591],[148,593],[149,593],[150,596],[151,598],[152,602],[153,608],[154,609],[155,613],[156,614],[157,623],[158,625],[159,627],[160,628],[161,630],[162,632],[163,634],[164,644],[165,649],[166,658],[167,663],[168,668],[169,680],[170,685],[171,685],[172,689],[173,699],[174,713],[175,715],[176,721],[177,724],[178,733],[179,736],[180,743],[181,752],[182,759],[183,763],[184,769],[185,774],[186,785],[187,788],[188,789],[189,791],[190,800],[191,806],[192,811],[193,816],[194,819],[195,823],[196,829],[197,835],[198,837],[199,838],[200,840],[201,844],[202,848],[203,853],[204,859],[205,864],[206,869],[207,872],[208,875],[209,879],[210,885],[211,888],[212,890],[213,894],[214,897],[215,900],[216,907],[217,913],[218,918],[219,919],[220,921],[221,923],[222,925],[223,927],[224,932],[225,936],[226,943],[227,951],[228,960],[229,968],[230,980],[231,991],[232,993],[233,999],[234,1009],[235,1016],[236,1022],[237,1029],[238,1044],[239,1059],[240,1069],[241,1082],[242,1089],[243,1092],[244,1100],[245,1107],[246,1117],[247,1130],[248,1146],[249,1154],[250,1168],[251,1186],[252,1206],[253,1220],[254,1240],[255,1251],[256,1264],[257,1273],[258,1290],[259,1302],[260,1317],[261,1327],[262,1336],[263,1340],[264,1353],[265,1367],[266,1373],[267,1396],[268,1417],[269,1439],[270,1466],[271,1480],[272,1495],[273,1510],[274,1529],[275,1545],[276,1554],[277,1572],[278,1585],[279,1600],[280,1604],[281,1649],[282,1662],[283,1680],[284,1705],[285,1720],[286,1739],[287,1760],[288,1777],[289,1801],[290,1816],[291,1826],[292,1847],[293,1866],[294,1877],[295,1888],[296,1903],[297,1912],[298,1920],[299,1926],[300,1945],[301,1954],[302,1974],[303,1974],[304,1994],[305,2008],[306,2020],[307,2025],[308,2031],[309,2039],[310,2047],[311,2056],[312,2062],[313,2071],[314,2084],[315,2108],[316,2120],[317,2134],[318,2148],[319,2168],[320,2181],[321,2190],[322,2204],[323,2211],[324,2226],[325,2239],[326,2247],[327,2265],[328,2277],[329,2284],[330,2297],[331,2312],[332,2325],[333,2338],[334,2354],[335,2369],[336,2382],[337,2389],[338,2398],[339,2408],[340,2418],[341,2428],[342,2437],[343,2451],[344,2462],[345,2477],[346,2489],[347,2501],[348,2512],[349,2522],[350,2532],[351,2546],[352,2564],[353,2578],[354,2592],[363,2701],[364,2713],[365,2724],[366,2741],[367,2753],[368,2763],[370,2781],[371,2787],[372,2793],[373,2801],[374,2816],[375,2831],[376,2837],[377,2842],[378,2852],[379,2861],[380,2868],[381,2877],[382,2888],[383,2909],[384,2927],[385,2934],[386,2942],[387,2950],[388,2968],[389,2976],[390,2983],[391,2997],[392,3004],[393,3017],[394,3023],[395,3031],[396,3036],[397,3043],[398,3049],[399,3054],[400,3069],[401,3073],[402,3079],[403,3081],[404,3084],[405,3091],[406,3099],[407,3113],[408,3116],[409,3125],[410,3129],[411,3130],[412,3145],[413,3150],[414,3157],[415,3160],[416,3164],[417,3168],[418,3171],[419,3175],[420,3178],[421,3183],[422,3186],[423,3188],[424,3191],[425,3194],[426,3197],[427,3198],[428,3201],[429,3204],[430,3204],[431,3205],[432,3206],[433,3207],[434,3208],[435,3210],[436,3212],[437,3218],[438,3220],[439,3224],[440,3227],[441,3228],[442,3233],[443,3235],[444,3239],[445,3243],[446,3248],[447,3250],[448,3256],[449,3260],[450,3261],[451,3263],[452,3264],[453,3268],[454,3269],[455,3272],[456,3273],[457,3274],[458,3274],[459,3274],[460,3282],[461,3285],[462,3286],[463,3286],[464,3286],[465,3287],[466,3287],[467,3287],[468,3291],[469,3292],[470,3292],[471,3292],[472,3292],[473,3296],[474,3296],[475,3298],[476,3298],[477,3299],[478,3301],[479,3301],[480,3303],[481,3304],[482,3304],[483,3309],[484,3309],[485,3310],[486,3313],[487,3313],[488,3313],[489,3313],[490,3318],[492,3319],[493,3320],[494,3324],[495,3330],[496,3340],[497,3343],[498,3343],[499,3344],[500,3346],[501,3348],[502,3349],[503,3351],[504,3354],[505,3356],[506,3357],[507,3358],[508,3362],[509,3363],[510,3366],[511,3371],[512,3372],[513,3373],[514,3374],[515,3376],[516,3377],[517,3380],[518,3382],[519,3385],[520,3386],[521,3388],[522,3390],[523,3391],[524,3392],[525,3392],[526,3393],[527,3393],[528,3395],[529,3398],[530,3403],[531,3406],[532,3409],[533,3411],[534,3411],[535,3412],[536,3414],[537,3416],[538,3416],[539,3416],[540,3416],[541,3416],[542,3417],[543,3418],[544,3420],[545,3421],[546,3423],[547,3427],[548,3427],[549,3428],[550,3428],[551,3428],[552,3429],[553,3430],[554,3430],[555,3431],[556,3431],[557,3431],[558,3431],[559,3432],[560,3432],[561,3432],[562,3432],[563,3432],[564,3432],[565,3433],[566,3433],[567,3433],[568,3433],[569,3433],[570,3444],[571,3444],[572,3444],[573,3444],[574,3444],[575,3444],[576,3444],[577,3444],[578,3444],[579,3444],[580,3444],[581,3444],[582,3444],[584,3444],[679,3463],[681,3463],[685,3463],[686,3463],[694,3470]];
+const N18D = [[2,33],[4,34],[5,36],[6,36],[7,37],[8,38],[9,38],[10,39],[11,41],[12,42],[13,43],[14,44],[15,47],[16,49],[17,50],[18,55],[19,59],[20,61],[21,63],[22,67],[23,70],[24,72],[25,75],[26,75],[27,77],[28,77],[29,77],[30,78],[31,80],[32,81],[33,85],[34,87],[35,89],[36,89],[37,90],[38,90],[39,91],[40,92],[41,92],[42,92],[43,94],[44,95],[45,97],[46,97],[47,97],[48,97],[49,97],[50,99],[51,99],[52,100],[53,100],[54,101],[55,101],[56,101],[57,102],[58,102],[59,104],[60,105],[61,106],[62,106],[63,106],[64,106],[65,108],[66,113],[67,115],[68,118],[69,122],[70,125],[71,130],[72,130],[73,135],[74,139],[75,139],[76,142],[77,144],[78,147],[79,152],[80,153],[81,155],[82,157],[83,159],[84,162],[85,164],[86,168],[87,170],[88,174],[89,175],[90,179],[91,180],[92,181],[93,182],[94,186],[95,186],[96,189],[97,191],[98,191],[99,198],[100,201],[101,205],[102,209],[106,210],[107,213],[108,214],[109,216],[110,217],[111,219],[112,222],[113,228],[114,231],[115,236],[116,240],[117,241],[118,242],[119,245],[120,248],[121,252],[122,255],[123,260],[124,268],[125,271],[126,273],[127,275],[128,280],[129,283],[130,285],[131,289],[132,298],[133,303],[134,306],[135,311],[136,313],[137,315],[138,319],[139,326],[140,336],[141,343],[142,347],[143,347],[144,352],[145,354],[146,356],[147,357],[148,359],[149,360],[150,361],[151,363],[152,366],[153,368],[154,370],[155,371],[156,374],[157,374],[158,377],[159,382],[160,383],[161,385],[162,386],[163,386],[164,392],[165,396],[166,402],[167,407],[168,410],[169,414],[170,416],[171,419],[172,422],[173,433],[174,439],[175,443],[176,446],[177,451],[178,459],[179,459],[180,461],[181,465],[182,468],[183,471],[184,475],[185,481],[186,484],[187,486],[188,488],[189,492],[190,502],[191,505],[192,510],[193,513],[194,516],[195,517],[196,521],[201,528],[202,529],[203,531],[204,536],[205,540],[206,546],[207,548],[208,551],[209,553],[210,555],[211,557],[212,559],[213,561],[214,563],[215,565],[216,569],[217,574],[218,578],[219,578],[220,582],[221,582],[222,584],[223,584],[224,587],[225,591],[226,594],[227,598],[228,603],[229,606],[230,610],[231,614],[232,621],[233,625],[234,629],[235,634],[236,639],[237,642],[238,652],[239,660],[240,665],[241,676],[242,679],[243,683],[244,690],[245,695],[246,702],[247,714],[248,721],[249,731],[250,741],[251,751],[252,764],[253,772],[254,792],[255,803],[256,814],[257,821],[258,833],[259,843],[260,855],[261,859],[262,870],[263,874],[264,880],[265,885],[266,890],[267,900],[268,914],[269,931],[270,957],[271,970],[272,984],[273,994],[274,1008],[275,1019],[276,1029],[277,1045],[278,1055],[279,1069],[280,1074],[281,1105],[282,1112],[283,1117],[284,1124],[285,1136],[286,1147],[287,1161],[288,1177],[289,1198],[290,1209],[291,1218],[292,1223],[293,1241],[294,1248],[295,1254],[296,1270],[297,1277],[298,1281],[299,1287],[300,1302],[301,1312],[302,1323],[303,1323],[304,1339],[305,1346],[306,1354],[307,1357],[308,1367],[309,1373],[310,1381],[311,1384],[312,1390],[313,1396],[314,1405],[315,1411],[316,1420],[317,1427],[318,1440],[319,1449],[320,1459],[321,1470],[322,1479],[323,1489],[324,1497],[325,1506],[326,1510],[327,1522],[328,1531],[329,1540],[330,1553],[331,1559],[332,1563],[333,1571],[334,1586],[335,1598],[336,1606],[337,1613],[338,1618],[339,1625],[340,1630],[341,1641],[342,1646],[343,1647],[344,1648],[345,1655],[346,1665],[347,1668],[348,1676],[349,1698],[350,1705],[351,1715],[352,1728],[353,1737],[354,1743],[363,1813],[364,1823],[365,1833],[366,1838],[367,1843],[368,1849],[370,1866],[371,1868],[372,1873],[373,1879],[374,1888],[375,1892],[376,1898],[377,1905],[378,1913],[379,1921],[380,1926],[381,1934],[382,1938],[383,1953],[384,1961],[385,1965],[386,1971],[387,1974],[388,1986],[389,1990],[390,1994],[391,1998],[392,2006],[393,2015],[394,2024],[395,2031],[396,2035],[397,2045],[398,2050],[399,2052],[400,2057],[401,2059],[402,2064],[403,2070],[404,2071],[405,2074],[406,2077],[407,2085],[408,2090],[409,2095],[410,2096],[411,2098],[412,2103],[413,2108],[414,2111],[415,2114],[416,2115],[417,2118],[418,2120],[419,2122],[420,2126],[421,2128],[422,2128],[423,2129],[424,2133],[425,2136],[426,2136],[427,2137],[428,2139],[429,2141],[430,2142],[431,2142],[432,2143],[433,2144],[434,2144],[435,2146],[436,2148],[437,2150],[438,2150],[439,2153],[440,2154],[441,2158],[442,2162],[443,2165],[444,2169],[445,2171],[446,2172],[447,2174],[448,2177],[449,2178],[450,2180],[451,2180],[452,2181],[453,2182],[454,2182],[455,2183],[456,2184],[457,2185],[458,2185],[459,2185],[460,2188],[461,2191],[462,2192],[463,2192],[464,2192],[465,2193],[466,2193],[467,2193],[468,2193],[469,2193],[470,2195],[471,2195],[472,2195],[473,2196],[474,2197],[475,2197],[476,2197],[477,2198],[478,2198],[479,2198],[480,2199],[481,2199],[482,2199],[483,2201],[484,2201],[485,2202],[486,2203],[487,2204],[488,2206],[489,2207],[490,2207],[492,2209],[493,2209],[494,2209],[495,2210],[496,2210],[497,2210],[498,2211],[499,2213],[500,2213],[501,2213],[502,2214],[503,2217],[504,2220],[505,2221],[506,2223],[507,2224],[508,2226],[509,2227],[510,2227],[511,2228],[512,2230],[513,2231],[514,2232],[515,2232],[516,2232],[517,2232],[518,2232],[519,2232],[520,2233],[521,2233],[522,2233],[523,2234],[524,2235],[525,2235],[526,2235],[527,2235],[528,2235],[529,2235],[530,2236],[531,2236],[532,2236],[533,2237],[534,2237],[535,2237],[536,2237],[537,2237],[538,2238],[539,2238],[540,2240],[541,2240],[542,2240],[543,2240],[544,2240],[545,2242],[546,2244],[547,2249],[548,2250],[549,2250],[550,2250],[551,2250],[552,2251],[553,2251],[554,2251],[555,2251],[556,2251],[557,2253],[558,2253],[559,2253],[560,2253],[561,2253],[562,2253],[563,2253],[564,2253],[565,2253],[566,2253],[567,2253],[568,2253],[569,2253],[570,2264],[571,2264],[572,2264],[573,2264],[574,2264],[575,2264],[576,2264],[577,2264],[578,2264],[579,2264],[580,2264],[581,2264],[582,2264],[584,2264],[679,2280],[681,2280],[685,2280],[686,2280],[694,2280]];
+
+const COL = {s2026:"#eb6834", s2014:"#2a78d6", s2018:"#1baf7a"};
+const INK3 = "#8b9296", RULE = "#e8ebec", PANEL = "#ffffff";
+
+const dayOf = iso => Math.round(
+  (Date.parse(iso + "T00:00:00Z") - Date.parse(DECLARATION_2026 + "T00:00:00Z")) / 86400000);
+
+const B26C = DATA_2026.map(r => [dayOf(r[0]), r[1]]);
+const B26D = DATA_2026.map(r => [dayOf(r[0]), r[2]]);
+
+const last = s => s[s.length - 1];
+const fmt = n => n.toLocaleString("en-US");
+
+document.getElementById("keys").innerHTML = [
+  ["2026 DRC BDBV", COL.s2026, last(B26C), last(B26D), "ongoing"],
+  ["2014 West Africa EBOV", COL.s2014, last(N14C), last(N14D), "final"],
+  ["2018 DRC EBOV", COL.s2018, last(N18C), last(N18D), "final"]
+].map(([nm, c, lc, ld, tag]) => `
+  <div class="key">
+    <div class="nm"><i class="swatch" style="background:${c}"></i>${nm}</div>
+    <div class="fig">${fmt(lc[1])} <span style="color:var(--ink-3)">/</span> ${fmt(ld[1])}</div>
+    <div class="meta">cases / deaths &middot; day ${lc[0]} &middot; ${tag}</div>
+  </div>`).join("");
+
+document.getElementById("n-cases").textContent =
+  `${B26C.length} + ${N14C.length} + ${N18C.length} reported points`;
+document.getElementById("n-deaths").textContent =
+  `${B26D.length} + ${N14D.length} + ${N18D.length} reported points`;
+
+const pts = (s, shift) => s.map(p => ({x: p[0] + shift, y: p[1]}));
+
+function dataset(label, s, color, shift, big){
+  return {
+    label, data: pts(s, shift), borderColor: color, borderWidth: 2,
+    fill: false, tension: 0, spanGaps: true,
+    pointRadius: big ? 3.5 : 1.5, pointHoverRadius: big ? 6.5 : 4.5,
+    pointBackgroundColor: color, pointBorderColor: PANEL,
+    pointBorderWidth: big ? 1.5 : 0
+  };
+}
+
+function options(unit, xmax, vax, shiftVal, yMax, showMarks){
+  return {
+    responsive: true, maintainAspectRatio: false,
+    animation: {duration: 0},
+    interaction: {mode: "nearest", intersect: false},
+    plugins: {
+      legend: {display: false},
+      vaxMarker: vax ? {marks: vax, shift: shiftVal, on: showMarks} : {marks: null},
+      tooltip: {
+        padding: 10, backgroundColor: "rgba(22,25,27,.93)",
+        titleFont: {family: "IBM Plex Mono", size: 12},
+        bodyFont: {family: "IBM Plex Sans", size: 12},
+        callbacks: {
+          title: it => "Day " + it[0].parsed.x,
+          label: c => `${c.dataset.label}: ${fmt(c.parsed.y)} ${unit}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: "linear", min: 0, max: xmax,
+        title: {display: true, text: "Days since declaration", color: INK3,
+                font: {family: "IBM Plex Sans", size: 12}},
+        ticks: {color: INK3, font: {family: "IBM Plex Mono", size: 11}, maxRotation: 0},
+        grid: {color: RULE}
+      },
+      y: {
+        beginAtZero: true, max: yMax,
+        title: {display: true, text: (unit.indexOf("per day") >= 0 ? "New " : "Cumulative ") + unit, color: INK3,
+                font: {family: "IBM Plex Sans", size: 12}},
+        ticks: {color: INK3, font: {family: "IBM Plex Mono", size: 11}, callback: fmt},
+        grid: {color: RULE}
+      }
+    }
+  };
+}
+
+// Derived daily incidence: average rate per reporting interval, then rolling mean.
+function incidence(series, win){
+  const raw = [];
+  for (let i = 1; i < series.length; i++){
+    const dt = series[i][0] - series[i-1][0];
+    if (dt > 0) raw.push([(series[i][0] + series[i-1][0]) / 2,
+                          (series[i][1] - series[i-1][1]) / dt]);
+  }
+  return raw.map(([x]) => {
+    const w = raw.filter(([xx]) => Math.abs(xx - x) <= win / 2);
+    return [x, w.reduce((s, [, r]) => s + r, 0) / w.length];
+  });
+}
+const I26 = incidence(B26C, 21);
+const I14 = incidence(N14C, 28);
+const I18 = incidence(N18C, 28);
+
+document.getElementById("n-inc").textContent = "derived from the cumulative series";
+
+const lastRow = DATA_2026[DATA_2026.length - 1];
+const asOf = new Date(lastRow[0] + "T00:00:00Z").toLocaleDateString("en-GB",
+  {day: "numeric", month: "long", year: "numeric", timeZone: "UTC"});
+document.getElementById("asof").innerHTML =
+  `<span>2026 data as of</span><b>${asOf}</b>` +
+  `<span>day ${dayOf(lastRow[0])} &middot; ${fmt(lastRow[1])} cases &middot; ${fmt(lastRow[2])} deaths</span>`;
+
+
+// Markers showing when vaccination began in each outbreak.
+const vaxMarker = {
+  id: "vaxMarker",
+  afterDatasetsDraw(ch){
+    const cfg = ch.options.plugins.vaxMarker;
+    if (!cfg || !cfg.marks || !cfg.on) return;
+    const xs = ch.scales.x, ys = ch.scales.y, c = ch.ctx;
+    cfg.marks.forEach(m => {
+      const mx = m.x + (m.shiftable ? (cfg.shift || 0) : 0);
+      if (mx < xs.min || mx > xs.max) return;
+      const px = xs.getPixelForValue(mx);
+      const py = ys.getPixelForValue(m.y);
+      const top = ys.getPixelForValue(m.labelY);
+      if (top < ys.top + 4 || top > py - 14) return;
+      c.save();
+      c.strokeStyle = m.color; c.lineWidth = 1.8;
+      c.beginPath(); c.moveTo(px, top); c.lineTo(px, py - 7); c.stroke();
+      c.fillStyle = m.color;
+      c.beginPath(); c.moveTo(px, py - 1); c.lineTo(px - 5, py - 9);
+      c.lineTo(px + 5, py - 9); c.closePath(); c.fill();
+      c.textAlign = "left"; c.textBaseline = "bottom";
+      const lines = Array.isArray(m.label) ? m.label : [m.label];
+      c.font = '600 12px "IBM Plex Sans", sans-serif';
+      c.fillStyle = "#16191b";
+      lines.forEach((ln, i) => c.fillText(ln, px + 8, top + 2 + i * 15));
+      c.font = '12px "IBM Plex Sans", sans-serif';
+      c.fillStyle = "#5b6367";
+      c.fillText(m.sub, px + 8, top + 2 + lines.length * 15);
+      c.restore();
+    });
+  }
+};
+Chart.register(vaxMarker);
+
+const M2018 = (labelY, y) => ({x: 7, y, labelY, color: COL.s2018,
+  label: "Ervebo ring vaccination begins", sub: "2018, day 7"});
+const M2026 = (labelY, y) => ({x: 104, y, labelY, color: COL.s2026, shiftable: true,
+  label: ["Limited vaccination", "with Ervebo begins"], sub: "2026, day 104"});
+
+let casesChart, deathsChart, incChart;
+
+function render(){
+  const xmax = +document.getElementById("xmax").value || 740;
+  const shift = +document.getElementById("shift").value || 0;
+  const marksOn = document.getElementById("marks").checked;
+  const lbl = shift ? `2026 DRC BDBV (shifted +${shift}d)` : "2026 DRC BDBV";
+
+  const build = (id, c26, c14, c18, unit, thin, vax, yMax) => {
+    const opt = options(unit, xmax, vax, shift, yMax, marksOn);
+    const d = [
+      dataset(lbl, c26, COL.s2026, shift, true),
+      dataset("2014 West Africa EBOV", c14, COL.s2014, 0, false),
+      dataset("2018 DRC EBOV", c18, COL.s2018, 0, false)
+    ];
+    if (thin) d.forEach(s => { s.pointRadius = s.borderWidth > 2 ? 2.5 : 0; s.tension = .2; });
+    return new Chart(document.getElementById(id), {type: "line", data: {datasets: d}, options: opt});
+  };
+
+  if (casesChart) casesChart.destroy();
+  if (deathsChart) deathsChart.destroy();
+  if (incChart) incChart.destroy();
+  casesChart  = build("casesChart",  B26C, N14C, N18C, "cases", false,
+                      [M2018(16500, 44), M2026(11200, 5900)]);
+  deathsChart = build("deathsChart", B26D, N14D, N18D, "deaths", false,
+                      [M2018(7800, 37), M2026(5300, 2830)]);
+  incChart    = build("incChart",    I26,  I14,  I18,  "cases per day", true,
+                      [M2018(300, 3), M2026(252, 75)], 320);
+}
+
+document.getElementById("xmax").addEventListener("input", render);
+document.getElementById("shift").addEventListener("input", render);
+document.getElementById("marks").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
