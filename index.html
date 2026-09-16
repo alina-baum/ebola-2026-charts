@@ -98,7 +98,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
   <h1>2026 BDBV Ebola Outbreak Tracker</h1>
   <p class="sub">Three outbreaks of two different viruses. <b>BDBV</b> is Bundibugyo virus, the species behind the 2026 outbreak in DRC and Uganda. <b>EBOV</b> is Zaire ebolavirus, the species behind both the 2014 West African and 2018 DRC epidemics.</p>
   <p class="sub" style="margin-top:10px">The cumulative charts plot reported values; the daily incidence chart is derived from them.</p>
-  <p class="sub" style="margin-top:10px">Ervebo is Merck's rVSV-ZEBOV vaccine, developed and licensed against Zaire ebolavirus. Its efficacy against Bundibugyo virus is unknown and currently under trial.</p>
+  <p class="sub" style="margin-top:10px">Ervebo is Merck's rVSV-ZEBOV vaccine, licensed against Zaire ebolavirus. Whether it protects against Bundibugyo virus is unknown and under trial.</p>
 </header>
 
 <div class="keys" id="keys"></div>
@@ -116,16 +116,16 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
     <label for="marks">Annotations</label>
     <label class="chk"><input type="checkbox" id="marks" checked> Show vaccination markers</label>
   </div>
-  <p class="hint">True start dates are unknown for all three outbreaks. Shifting lets the 2026 overlay be varied; the historical curves stay anchored to their declaration dates.</p>
+  <p class="hint">Shifts the 2026 curve only. The historical curves stay anchored to their declaration dates.</p>
 </div>
 
 <figure>
   <figcaption>
-    <span class="cap-t">Cumulative confirmed cases</span>
+    <span class="cap-t">Cumulative reported cases</span>
     <span class="cap-n" id="n-cases"></span>
   </figcaption>
   <div class="canvas-box">
-    <canvas id="casesChart" role="img" aria-label="Cumulative confirmed cases for three Ebola outbreaks plotted against days since declaration"></canvas>
+    <canvas id="casesChart" role="img" aria-label="Cumulative reported cases for three Ebola outbreaks plotted against days since declaration"></canvas>
   </div>
   <div class="legend">
     <span><i class="swatch" style="background:var(--s2026)"></i>2026 DRC BDBV</span>
@@ -151,18 +151,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
 
 <figure>
   <figcaption>
-    <span class="cap-t">New confirmed cases per day</span>
+    <span class="cap-t">New reported cases per day</span>
     <span class="cap-n" id="n-inc"></span>
   </figcaption>
   <div class="canvas-box">
-    <canvas id="incChart" role="img" aria-label="New confirmed cases per day for three Ebola outbreaks, derived from the reported cumulative totals"></canvas>
+    <canvas id="incChart" role="img" aria-label="New reported cases per day for three Ebola outbreaks, derived from the reported cumulative totals"></canvas>
   </div>
   <div class="legend">
     <span><i class="swatch" style="background:var(--s2026)"></i>2026 DRC BDBV</span>
     <span><i class="swatch" style="background:var(--s2014)"></i>2014 West Africa EBOV</span>
     <span><i class="swatch" style="background:var(--s2018)"></i>2018 DRC EBOV</span>
   </div>
-  <p style="font-size:12.5px;color:var(--ink-2);margin-top:12px;max-width:70ch">Unlike the two charts above, this one is derived rather than reported. No source publishes daily incidence, so each value is the average rate across a reporting interval, smoothed over a rolling window. Long intervals are averaged flat, which hides any variation inside them.</p>
+  <p style="font-size:12.5px;color:var(--ink-2);margin-top:12px;max-width:70ch">No source publishes daily incidence. Each value is the average rate across a reporting interval, smoothed over a rolling window. Long intervals are averaged flat, so variation inside them is not visible.</p>
 </figure>
 
 <h2>Sources</h2>
@@ -178,22 +178,22 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
 <h2>Method and limitations</h2>
 
 <h3>Handling of superseded values</h3>
-<p>Cumulative counts occasionally fell in the original reports, most visibly during WHO's November 2014 patient-database reconciliation, which first added roughly 3,800 previously uncounted cases and then removed several hundred. A reported point is kept only where no later report shows a lower cumulative value; contradicted interim values are dropped.</p>
+<p>Cumulative counts sometimes fell in the original reports, mostly during WHO's November 2014 patient-database reconciliation. A point is kept only where no later report shows a lower value. Contradicted values are dropped.</p>
 
 <h3>Case definitions differ between outbreaks</h3>
-<p>The 2026 series counts laboratory-confirmed cases only, excluding the large pool of suspected cases and suspected deaths recorded early in the outbreak. The 2014 and 2018 series follow their sources in combining confirmed and probable cases. Two different reporting systems are spliced within the 2014 series at day 288, where the patient-database figures run about 1.5 percent below the daily situation-report stream after duplicate removal.</p>
+<p>All numbers are derived from reported cases, and the three series do not count the same thing. 2026 is laboratory-confirmed cases only. 2014 includes confirmed, probable and suspected cases; 2018 includes confirmed and probable.</p>
 
 <h3>Fatality ratios are not directly comparable across outbreaks</h3>
 <table>
   <tr><th>Outbreak</th><th>CFR</th></tr>
   <tr><td>2014 West Africa EBOV</td><td>~40%</td></tr>
   <tr><td>2018 DRC EBOV</td><td>~66%</td></tr>
-  <tr><td>2026 DRC BDBV</td><td>~48%, rising</td></tr>
+  <tr><td>2026 DRC BDBV</td><td>~48%</td></tr>
 </table>
-<p>These are crude ratios: cumulative reported deaths divided by cumulative reported cases. They should not be compared closely against one another. The denominators differ in what they count and in how completely cases were ever detected, and the 2026 figure is still moving because the outbreak is ongoing and many cases have not yet resolved.</p>
+<p>Crude ratios: cumulative reported deaths divided by cumulative reported cases. The denominators differ and detection was more complete in some outbreaks than others, so these should not be compared closely. The 2026 figure is still moving.</p>
 
 <h3>Declaration dates are not true start dates</h3>
-<p>Every one of these outbreaks was already spreading before it was recognised, and in each case the true starting point is unknown. Aligning the curves on day zero is therefore a convention, not a measurement, and it favours whichever outbreak was detected latest in its course. The shift control moves the 2026 curve along the x-axis so its overlay against the historical curves can be varied.</p>
+<p>All three outbreaks were spreading before they were recognised. The true start date is unknown in each case, so day zero is a convention. The shift control moves the 2026 curve along the x-axis to test how much that assumption matters.</p>
 
 </div>
 
@@ -239,7 +239,8 @@ const DATA_2026 = [
   ["2026-09-07",  6777,  3269],   // DRC MoH SitRep 116 via ECDC 8 Sep (data to 7 Sep) (+UGA)
   ["2026-09-08",  6863,  3312],   // DRC MoH via ECDC 9 Sep (data to 8 Sep) (+UGA)
   ["2026-09-10",  6962,  3351],   // DRC MoH via ECDC 11 Sep (data to 10 Sep) (+UGA)
-  ["2026-09-12",  7220,  3477],   // DRC MoH situation update 13 Sep (data to 12 Sep) (+UGA)   // DRC MoH via ECDC 6 Sep (data to 5 Sep) (+UGA)
+  ["2026-09-12",  7220,  3477],   // DRC MoH situation update 13 Sep (data to 12 Sep) (+UGA)
+  ["2026-09-13",  7278,  3512],   // DRC MoH via ECDC 14 Sep (data to 13 Sep) (+UGA)   // DRC MoH via ECDC 6 Sep (data to 5 Sep) (+UGA)
 ];
 // ============================================================
 //  Historical series below — no need to edit. [day, value]
