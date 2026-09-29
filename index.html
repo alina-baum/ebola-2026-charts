@@ -168,7 +168,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);
 <h2>Sources</h2>
 <table>
   <tr><th>Outbreak</th><th>Span</th><th>Source</th></tr>
-  <tr><td>2026 DRC BDBV</td><td>Days 0–110</td><td>Africa CDC situation reports and executive briefs; WHO AFRO weekly external situation reports; WHO Disease Outbreak News; DRC Ministry of Health daily figures relayed by ECDC</td></tr>
+  <tr><td>2026 DRC BDBV</td><td id="span2026">Days 0–110</td><td>Africa CDC situation reports and executive briefs; WHO AFRO weekly external situation reports; WHO Disease Outbreak News; DRC Ministry of Health daily figures relayed by ECDC</td></tr>
   <tr><td>2014 West Africa EBOV</td><td>Days 4–288</td><td>WHO situation reports compiled by C. Rivers (<code>github.com/cmrivers/ebola</code>), summed across Guinea, Liberia and Sierra Leone</td></tr>
   <tr><td>2014 West Africa EBOV</td><td>Days 289–731</td><td>WHO patient database weekly country figures, same three-country sum</td></tr>
   <tr><td>2018 DRC EBOV</td><td>Days 2–686</td><td>DRC Ministry of Health daily reports via the HDX North Kivu dataset</td></tr>
@@ -243,7 +243,9 @@ const DATA_2026 = [
   ["2026-09-13",  7278,  3512],   // DRC MoH via ECDC 14 Sep (data to 13 Sep) (+UGA)
   ["2026-09-15",  7424,  3579],   // DRC MoH via ECDC 16 Sep (data to 15 Sep) (+UGA)
   ["2026-09-16",  7495,  3607],   // DRC MoH SitRep 125 via ECDC 17 Sep (data to 16 Sep) (+UGA)
-  ["2026-09-19",  7634,  3678],   // DRC MoH, data to 19 Sep (+UGA)   // DRC MoH via ECDC 6 Sep (data to 5 Sep) (+UGA)
+  ["2026-09-19",  7634,  3678],   // DRC MoH, data to 19 Sep (+UGA)
+  ["2026-09-23",  7910,  3801],   // WHO DON618, data to 23 Sep (+UGA)
+  ["2026-09-27",  8087,  3903],   // DRC INSP report published 28 Sep, data to 27 Sep (+UGA)
 ];
 // ============================================================
 //  Historical series below — no need to edit. [day, value]
@@ -348,6 +350,9 @@ const I14 = incidence(N14C, 28);
 const I18 = incidence(N18C, 28);
 
 document.getElementById("n-inc").textContent = "derived from the cumulative series";
+
+const span26 = document.getElementById("span2026");
+if (span26) span26.textContent = "Days 0\u2013" + dayOf(DATA_2026[DATA_2026.length - 1][0]);
 
 const lastRow = DATA_2026[DATA_2026.length - 1];
 const asOf = new Date(lastRow[0] + "T00:00:00Z").toLocaleDateString("en-GB",
